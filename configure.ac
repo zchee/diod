@@ -148,6 +148,28 @@ case "${host_os}" in
         AC_MSG_FAILURE([unsupported impersonation model]);;
     esac
     ;;
+  darwin*)
+    case "${enable_diodmount}" in
+      yes)
+        ;;
+      *)
+        enable_diodmount=no;;
+    esac
+    case "${enable_tests}" in
+      yes)
+        ;;
+      *)
+        enable_tests=no;;
+    esac
+    case "${enable_impersonation}" in
+      no)
+        enable_impersonation=no;;
+      yes|darwin|auto)
+        enable_impersonation=darwin;;
+      *)
+        AC_MSG_FAILURE([unsupported impersonation model]);;
+    esac
+    ;;
   *)
     case "${enable_diodmount}" in
       yes)
@@ -173,10 +195,14 @@ esac
 AM_CONDITIONAL([ENABLE_DIODMOUNT], [test "x${enable_diodmount}" = "xyes"])
 AM_CONDITIONAL([ENABLE_TESTS], [test "x${enable_tests}" = "xyes"])
 AM_CONDITIONAL([USE_IMPERSONATION_LINUX], [test "x${enable_impersonation}" = "xlinux"])
+AM_CONDITIONAL([USE_IMPERSONATION_DARWIN], [test "x${enable_impersonation}" = "xdarwin"])
 AM_CONDITIONAL([USE_IMPERSONATION_GANESHA], [test "x${enable_impersonation}" = "xganesha"])
 
 if test "x${enable_impersonation}" = "xlinux"; then
   AC_DEFINE([USE_IMPERSONATION_LINUX], [1], [Use Linux setfsuid])
+fi
+if test "x${enable_impersonation}" = "xdarwin"; then
+  AC_DEFINE([USE_IMPERSONATION_DARWIN], [1], [Use Darwin setgroups])
 fi
 if test "x${enable_impersonation}" = "xganesha"; then
   AC_DEFINE([USE_IMPERSONATION_GANESHA], [1], [Use nfs-ganesha-kmod syscalls])

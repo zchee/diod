@@ -231,7 +231,7 @@ _getgrouplist (Npsrv *srv, Npuser *u)
 		np_logerr (srv, "_alloc_user: %s", u->uname);
 		goto done;
 	}
-	if (getgrouplist(u->uname, u->gid, u->sg, &u->nsg) == -1) {
+	if (getgrouplist(u->uname, u->gid, (int *)u->sg, &u->nsg) == -1) {
 		np_logerr (srv, "_alloc_user: %s: getgrouplist", u->uname);
 		if (np_rerror () == 0)
 			np_uerror (EPERM);

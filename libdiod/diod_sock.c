@@ -102,6 +102,9 @@ _enable_keepalive(int fd)
         goto done;
     }
     i = 120;
+#if !defined(TCP_KEEPIDLE) && defined(TCP_KEEPALIVE)
+#define TCP_KEEPIDLE TCP_KEEPALIVE
+#endif
     ret = setsockopt (fd, IPPROTO_TCP, TCP_KEEPIDLE, &i, len);
     if (ret < 0) {
         err ("setsockopt SO_KEEPIDLE");

@@ -219,10 +219,10 @@ lsfile_l (Npcfid *dir, char *name)
     mtime = ctime( &sb.st_mtime);
     printf ("%10s %4lu %s %s %12lu %.*s %s\n",
             mode2str (sb.st_mode),
-            sb.st_nlink,
+            (unsigned long)sb.st_nlink,
             pw ? pw->pw_name : uid,
             gr ? gr->gr_name : gid,
-            sb.st_size,
+            (unsigned long)sb.st_size,
             (int)strlen (mtime) - 13, mtime + 4,
             name);
     return;

@@ -120,11 +120,11 @@ npc_fstat (Npcfid *fid, struct stat *sb)
 		sb->st_blksize = blksize;
 		sb->st_blocks = blocks;
 		sb->st_atime = atime_sec;
-		sb->st_atim.tv_nsec = atime_nsec;
+		sb->st_atimespec.tv_nsec = atime_nsec;
 		sb->st_mtime = mtime_sec;
-		sb->st_mtim.tv_nsec = mtime_nsec;
+		sb->st_mtimespec.tv_nsec = mtime_nsec;
 		sb->st_ctime = ctime_sec;
-		sb->st_ctim.tv_nsec = ctime_nsec;
+		sb->st_ctimespec.tv_nsec = ctime_nsec;
 	}
 	return ret;
 }

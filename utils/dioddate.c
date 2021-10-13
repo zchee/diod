@@ -156,7 +156,7 @@ main (int argc, char *argv[])
         errn (np_rerror (), "error reading date");
         goto done;
     }
-    if (sscanf (buf, "%lu.%lu %d.%d", &tv.tv_sec, &tv.tv_usec,
+    if (sscanf (buf, "%lu.%lu %d.%d", &tv.tv_sec, (unsigned long *)&tv.tv_usec,
                                     &tz.tz_minuteswest, &tz.tz_dsttime) != 4) {
         msg ("error scanning returned date: %s", buf);
         goto done;

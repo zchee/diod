@@ -24,6 +24,7 @@
 
 #include <stdarg.h>
 #include <sys/types.h>
+#include <sys/time.h>
 
 typedef struct p9_str Npstr;
 typedef struct p9_qid Npqid;

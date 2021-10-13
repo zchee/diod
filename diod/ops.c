@@ -94,6 +94,9 @@
 #include <pwd.h>
 #include <grp.h>
 #include <dirent.h>
+#ifdef __APPLE__
+#include <sys/dirent.h>
+#endif
 #include <fcntl.h>
 #include <utime.h>
 #include <stdarg.h>
@@ -620,7 +623,7 @@ diod_statfs (Npfid *fid)
         goto error;
     }
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) || defined(__APPLE__)
     fsid = (u64)sb.f_fsid.val[0] | ((u64)sb.f_fsid.val[1] << 32);
 #else
     fsid = (u64)sb.f_fsid.__val[0] | ((u64)sb.f_fsid.__val[1] << 32);
@@ -632,6 +635,12 @@ diod_statfs (Npfid *fid)
                                   sb.f_bfree, sb.f_bavail, sb.f_files,
                                   sb.f_ffree, fsid,
                                   sb.f_namemax))) {
+#endif
+#ifdef __APPLE__
+    if (!(ret = np_create_rstatfs(type, sb.f_bsize, sb.f_blocks,
+                                  sb.f_bfree, sb.f_bavail, sb.f_files,
+                                  sb.f_ffree, fsid,
+                                  MNAMELEN))) {
 #else
     if (!(ret = np_create_rstatfs(type, sb.f_bsize, sb.f_blocks,
                                   sb.f_bfree, sb.f_bavail, sb.f_files,
@@ -657,6 +666,11 @@ struct dotl_openflag_map {
         int open_flag;
         int dotl_flag;
 };
+
+// for darwin
+#ifndef O_DIRECT
+#define O_DIRECT 0
+#endif
 
 static int
 _remap_oflags (int flags)
@@ -978,12 +992,21 @@ diod_getattr(Npfid *fid, u64 request_mask)
                                     sb.st_size,
                                     sb.st_blksize,
                                     sb.st_blocks,
+#ifdef __APPLE__
+                                    sb.st_atimespec.tv_sec,
+                                    sb.st_atimespec.tv_nsec,
+                                    sb.st_mtimespec.tv_sec,
+                                    sb.st_mtimespec.tv_nsec,
+                                    sb.st_ctimespec.tv_sec,
+                                    sb.st_ctimespec.tv_nsec,
+#else
                                     sb.st_atim.tv_sec,
                                     sb.st_atim.tv_nsec,
                                     sb.st_mtim.tv_sec,
                                     sb.st_mtim.tv_nsec,
                                     sb.st_ctim.tv_sec,
                                     sb.st_ctim.tv_nsec,
+#endif
                                     0, 0, 0, 0))) {
         np_uerror (ENOMEM);
         goto error;

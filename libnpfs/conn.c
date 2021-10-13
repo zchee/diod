@@ -147,7 +147,7 @@ _debug_trace (Npsrv *srv, Npfcall *fc)
 			(void)gettimeofday(&a, NULL);
 			timersub(&a, &b, &c);
 			np_logmsg(srv, "[%lu.%-3lu] %s",
-				  c.tv_sec, c.tv_usec/1000, s);
+				  c.tv_sec, (unsigned long)c.tv_usec/1000, s);
 		} else
 			np_logmsg(srv, "%s", s);
 	}

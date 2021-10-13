@@ -307,7 +307,7 @@ _ctl_get_date (char *name, void *a)
 		goto error;
 	}
 	if (aspf (&s, &len, "%lu.%lu %d.%d\n",
-					tv.tv_sec,         tv.tv_usec,
+					tv.tv_sec,         (unsigned long)tv.tv_usec,
 					tz.tz_minuteswest, tz.tz_dsttime) < 0) {
 		np_uerror (ENOMEM);
 		goto error;

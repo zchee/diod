@@ -312,7 +312,7 @@ _become_user (char *name, uid_t uid, int realtoo)
             msg_exit ("error looking up uid %d", uid);
     }
     nsg = sizeof (sg) / sizeof(sg[0]);
-    if (getgrouplist(pwd->pw_name, pwd->pw_gid, sg, &nsg) == -1)
+    if (getgrouplist(pwd->pw_name, pwd->pw_gid, (int *)sg, &nsg) == -1)
         err_exit ("user is in too many groups");
 #if USE_IMPERSONATION_LINUX
     if (syscall(SYS_setgroups, nsg, sg) < 0)
@@ -377,7 +377,14 @@ _daemonize (void)
     }
     if (chdir (rdir) < 0)
         err_exit ("chdir %s", rdir);
+#ifdef __APPLE__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations" // for daemon
+#endif
     if (daemon (1, 0) < 0)
+#ifdef __APPLE__
+#pragma clang diagnostic pop
+#endif
         err_exit ("daemon");
 }
 
@@ -425,6 +432,34 @@ _sighand (int sig)
     }
 }
 
+#ifdef __APPLE__
+static int
+_ppoll(struct pollfd *fds, nfds_t nfds,
+      const struct timespec *ts, const sigset_t *sigmask)
+{
+    int timeout_ms;
+
+    if (ts) {
+	int tmp, tmp2;
+
+	if (ts->tv_sec > INT_MAX/1000)
+	    timeout_ms = INT_MAX;
+	else {
+	    tmp = (int)(ts->tv_sec * 1000);
+	    /* round up 1ns to 1ms to avoid excessive wakeups for <1ms sleep */
+	    tmp2 = (int)((ts->tv_nsec + 999999L) / (1000L * 1000L));
+	    if (INT_MAX - tmp < tmp2)
+		timeout_ms = INT_MAX;
+	    else
+		timeout_ms = (int)(tmp + tmp2);
+	}
+    }
+    else
+	timeout_ms = -1;
+
+    return poll(fds, nfds, timeout_ms);
+}
+#endif
 
 /* Thread to handle SIGHUP, SIGTERM, and new connections on listen ports.
  */
@@ -458,7 +493,7 @@ _service_loop (void *arg)
             ss.fds[i].events = POLLIN;
             ss.fds[i].revents = 0;
         }
-        if (ppoll (ss.fds, ss.nfds, NULL, &sigs) < 0) {
+        if (_ppoll (ss.fds, ss.nfds, NULL, &sigs) < 0) {
             if (errno == EINTR)
                 continue;
             err_exit ("ppoll");

@@ -164,9 +164,17 @@ _lgetxattr (Xattr x, const char *path)
     ssize_t len;
 
     if (x->name)
+#ifdef __APPLE__
+        len = getxattr (path, x->name, NULL, 0, 0, XATTR_NOFOLLOW);
+#else
         len = lgetxattr (path, x->name, NULL, 0);
+#endif
     else
+#ifdef __APPLE__
+        len = listxattr (path, NULL, 0, XATTR_NOFOLLOW);
+#else
         len = llistxattr (path, NULL, 0);
+#endif
     if (len < 0) {
         np_uerror (errno);
         return -1;
@@ -178,9 +186,17 @@ _lgetxattr (Xattr x, const char *path)
         return -1;
     }
     if (x->name)
+#ifdef __APPLE__
+        x->len = getxattr (path, x->name, x->buf, len, 0, XATTR_NOFOLLOW);
+#else
         x->len = lgetxattr (path, x->name, x->buf, len);
+#endif
     else
+#ifdef __APPLE__
+        x->len = listxattr (path, x->buf, len, XATTR_NOFOLLOW);
+#else
         x->len = llistxattr (path, x->buf, len);
+#endif
     if (x->len < 0) {
         np_uerror (errno);
         return -1;
@@ -233,16 +249,31 @@ xattr_close (Npfid *fid)
     if (f->xattr) {
         if ((f->xattr->flags & XATTR_FLAGS_SET)) {
             if (f->xattr->len > 0) {
+#ifdef __APPLE__
+                if (setxattr (path_s (f->path), f->xattr->name, f->xattr->buf,
+                               f->xattr->len, 0, f->xattr->setflags | XATTR_NOFOLLOW) < 0) {
+                    np_uerror (errno);
+                    rc = -1;
+                }
+#else
                 if (lsetxattr (path_s (f->path), f->xattr->name, f->xattr->buf,
                                f->xattr->len, f->xattr->setflags) < 0) {
                     np_uerror (errno);
                     rc = -1;
                 }
+#endif
             } else if (f->xattr->len == 0) {
+#ifdef __APPLE__
+                if (removexattr (path_s (f->path), f->xattr->name, XATTR_NOFOLLOW) < 0) {
+                    np_uerror (errno);
+                    rc = -1;
+                }
+#else
                 if (lremovexattr (path_s (f->path), f->xattr->name) < 0) {
                     np_uerror (errno);
                     rc = -1;
                 }
+#endif
             }
         }
         _xattr_destroy (&f->xattr);
